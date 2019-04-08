@@ -1,10 +1,17 @@
 #include "PreAllocString.h"
 
-/* TODO x
+/*
+  TODO x
     operator const char *() const;
     operator const void *() const;
-    const char & operator [] (const int idx);
-*/
+
+
+template <int size>
+const char & PreAllocString<size>::operator [] (const int idx) {
+    if (idx > 0 && idx < size) {
+        return this->text[idx];
+    }
+}
 
 template <int size>
 PreAllocString<size>::PreAllocString() {
@@ -24,7 +31,7 @@ PreAllocString<size>::~PreAllocString() {
 template <int size>
 size_t PreAllocString<size>::GetLength() const {
     int l = 0;
-    while (text[l] != '\0') {
+    while (text[l] != '\0' && l < size) {
         l++;
     }
     return l;
@@ -46,6 +53,9 @@ PreAllocString<size>& PreAllocString<size>::operator = (char rhs) {
 
 template <int size>
 PreAllocString<size>& PreAllocString<size>::operator = (const char * rhs) {
+    if (nullptr == rhs) {
+        return this;
+    }
     this->Empty();
     int l = 0;
     while(rhs[l] != '\0') {
@@ -57,6 +67,9 @@ PreAllocString<size>& PreAllocString<size>::operator = (const char * rhs) {
 
 template <int size>
 PreAllocString<size>& PreAllocString<size>::operator = (char * const rhs) {
+    if (nullptr == rhs) {
+        return this;
+    }
     this->Empty();
     int l = 0;
     while(rhs[l] != '\0') {
@@ -76,7 +89,10 @@ PreAllocString<size>& PreAllocString<size>::operator += (char rhs) {
 
 
 template <int size>
-PreAllocString<size>& PreAllocString<size>::operator += (char const *rhs) {
+PreAllocString<size>& PreAllocString<size>::operator += (char const * rhs) {
+    if (nullptr == rhs) {
+        return this;
+    }
     int currentLength = this->GetLength();
     int index = 0;
     while (currentLength + index < size) {
@@ -88,13 +104,13 @@ PreAllocString<size>& PreAllocString<size>::operator += (char const *rhs) {
 
 template <int size>
 void PreAllocString<size>::AddFormat(const char * format, ...) {
-
+    if (nullptr == format) {
+        return this;
+    }
 }
 
 template <int size>
 void PreAllocString<size>::AddWhiteSpace() {
-
+    return this += ' ';
 }
-
-
-
+*/

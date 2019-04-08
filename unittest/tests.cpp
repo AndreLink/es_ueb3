@@ -7,5 +7,8 @@ TEST_CASE("String Tests", "[PreAllocString]") {
         PreAllocString<20> pas;
         REQUIRE(pas.GetLength() == 0);
         REQUIRE(pas.SizeOf() == 20);
+
+        pas = 'a';
+        REQUIRE(pas[0] == 'a');
     }
 }
