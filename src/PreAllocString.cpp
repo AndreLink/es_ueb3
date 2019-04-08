@@ -1,6 +1,6 @@
 #include "PreAllocString.h"
 
-/* TODO
+/* TODO x
     operator const char *() const;
     operator const void *() const;
     const char & operator [] (const int idx);
