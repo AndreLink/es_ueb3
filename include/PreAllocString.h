@@ -1,159 +1,171 @@
-#include <stdlib.h>
-
 #ifndef PREALLOCSTR_H
-
 #define PREALLOCSTR_H
 
-template <int size>
-class PreAllocString {
+#include "Printf.h"
+#include <stdlib.h>
 
-    private:
-        char text[size];
+#define CREATE(varname, size) PreAllocString<size> varname
+#define NULL_TERMINATOR_SIZE 1
+#define NULL_TERMINATOR '\0'
+#define WHITESPACE ' '
 
-    public:
-        PreAllocString();
-        //~PreAllocString();
+template <size_t size>
+class PreAllocString
+{
+    static_assert(size > 0);
 
-        operator const char *() const;
-        operator const void *() const;
-        const char & operator [] (const int idx);
+  private:
+    char text[size];
+    size_t length;
+    PreAllocString &addString(const char *rhs);
+    bool addChar(const char c);
 
-        size_t GetLength() const;
+  public:
+    PreAllocString();
 
-        constexpr size_t SizeOf();
+    operator const char *() const;
+    operator const void *() const;
+    const char &operator[](const int idx);
 
-        void Empty();
+    size_t GetLength() const;
 
-        PreAllocString& operator =(char rhs);
-        PreAllocString& operator =(const char * rhs);
-        PreAllocString& operator =(char * const rhs);
+    constexpr size_t SizeOf();
 
-        PreAllocString& operator +=(char rhs);
-        PreAllocString& operator +=(char const * rhs);
+    void Empty();
 
-        void AddFormat(const char * format, ...);
-        void AddWhiteSpace();
+    PreAllocString &operator=(char rhs);
+    PreAllocString &operator=(const char *rhs);
+    PreAllocString &operator=(char *const rhs);
+
+    PreAllocString &operator+=(char rhs);
+    PreAllocString &operator+=(char const *rhs);
+
+    void AddFormat(const char *format, ...);
+    void AddWhiteSpace();
 };
 
-template <int size>
-PreAllocString<size>::operator const char *() const {
+template <size_t size>
+bool PreAllocString<size>::addChar(const char c)
+{
+    if (length + NULL_TERMINATOR_SIZE < size)
+    {
+        text[length] = c;
+        length++;
+        return true;
+    }
+    return false;
+}
+
+template <size_t size>
+PreAllocString<size> &PreAllocString<size>::addString(const char *rhs)
+{
+    if (nullptr != rhs)
+    {
+        int index = 0;
+        while (NULL_TERMINATOR != rhs[index] && addChar(rhs[index]))
+        {
+            index++;
+        }
+    }
+    return *this;
+}
+
+template <size_t size>
+PreAllocString<size>::PreAllocString() { Empty(); }
+
+template <size_t size>
+PreAllocString<size>::operator const char *() const
+{
     return text;
 }
 
-template <int size>
-PreAllocString<size>::operator const void *() const {
-    return text;
+template <size_t size>
+PreAllocString<size>::operator const void *() const
+{
+    return static_cast<void *>(text);
 }
 
-template <int size>
-const char & PreAllocString<size>::operator [] (const int idx) {
-    if (idx > 0 && idx < size) {
-        return text[idx];
-    } else {
-        return text[0];
-    }
+template <size_t size>
+const char &PreAllocString<size>::operator[](const int idx)
+{
+    int index = idx % size;
+    if (index < 0)
+        index += size;
+    return text[index];
 }
 
-template <int size>
-PreAllocString<size>::PreAllocString() {
-    Empty();
+template <size_t size>
+size_t PreAllocString<size>::GetLength() const
+{
+    return length;
 }
 
-/*
-template <int size>
-PreAllocString<size>::~PreAllocString() {
-    delete text;
-}
-*/
-template <int size>
-size_t PreAllocString<size>::GetLength() const {
-    int l = 0;
-    while (text[l] != '\0' && l < size) {
-        l++;
-    }
-    return l;
-}
-
-template <int size>
-constexpr size_t PreAllocString<size>::SizeOf() {
+template <size_t size>
+constexpr size_t PreAllocString<size>::SizeOf()
+{
     return size;
 }
 
-template <int size>
-void PreAllocString<size>::Empty() {
-    for (int i = 0; i<size; i++) {
-        text[i] = '\0';
+template <size_t size>
+void PreAllocString<size>::Empty()
+{
+    length = 0;
+    for (unsigned int i = 0; i < size; i++)
+    {
+        text[i] = NULL_TERMINATOR;
     }
 }
 
-template <int size>
-PreAllocString<size>& PreAllocString<size>::operator = (char rhs) {
+template <size_t size>
+PreAllocString<size> &PreAllocString<size>::operator=(char rhs)
+{
     Empty();
-    text[0] = rhs;
+    addChar(rhs);
     return *this;
 }
 
-template <int size>
-PreAllocString<size>& PreAllocString<size>::operator = (const char * rhs) {
-    if (nullptr == rhs) {
-        return *this;
-    }
+template <size_t size>
+PreAllocString<size> &PreAllocString<size>::operator=(const char *rhs)
+{
     Empty();
-    int l = 0;
-    while(rhs[l] != '\0' && l < size-1) {
-        text[l] = rhs[l];
-        l++;
-    }
-    return *this;
+    return addString(rhs);
 }
 
-
-template <int size>
-PreAllocString<size>& PreAllocString<size>::operator = (char * const rhs) {
-    if (nullptr == rhs) {
-        return *this;
-    }
+template <size_t size>
+PreAllocString<size> &PreAllocString<size>::operator=(char *const rhs)
+{
     Empty();
-    int l = 0;
-    while(rhs[l] != '\0' && l < size-1) {
-        text[l] = rhs[l];
-        l++;
-    }
+    return addString(rhs);
+}
+
+template <size_t size>
+PreAllocString<size> &PreAllocString<size>::operator+=(char rhs)
+{
+    addChar(rhs);
     return *this;
 }
 
-template <int size>
-PreAllocString<size>& PreAllocString<size>::operator += (char rhs) {
-    int len = GetLength();
-    if (len < size-1) {
-        text[len+1] = rhs;
-    }
-    return *this;
+template <size_t size>
+PreAllocString<size> &PreAllocString<size>::operator+=(char const *rhs)
+{
+    return addString(rhs);
 }
 
-
-template <int size>
-PreAllocString<size>& PreAllocString<size>::operator += (char const * rhs) {
-    if (nullptr == rhs) {
-        return *this;
-    }
-    int currentLength = GetLength();
-    int index = 0;
-    while (currentLength + index < size) {
-        text[currentLength + index] = rhs[index];
-        index++;
-    }
-    return *this;
+template <size_t size>
+void PreAllocString<size>::AddFormat(const char *format, ...)
+{
+    va_list vl;
+    va_start(vl, format);
+    char *dst = text + length;
+    const void *end = text + size - NULL_TERMINATOR_SIZE;
+    length += Printf(dst, end, format, vl);
+    va_end(vl);
 }
 
-template <int size>
-void PreAllocString<size>::AddFormat(const char * format, ...) {
-
-}
-
-template <int size>
-void PreAllocString<size>::AddWhiteSpace() {
-    this += ' ';
+template <size_t size>
+void PreAllocString<size>::AddWhiteSpace()
+{
+    addChar(WHITESPACE);
 }
 
 #endif /* PREALLOCSTR_H */
